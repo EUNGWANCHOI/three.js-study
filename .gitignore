@@ -1,0 +1,26 @@
+# node_modules: 의존성 라이브러리
+node_modules/
+
+# Vite build 결과물
+dist/
+
+# 환경 설정 파일 (개인용 또는 민감 정보)
+.env
+.env.*
+
+# 운영체제별 임시 파일
+.DS_Store
+Thumbs.db
+
+# 로그 파일
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 에디터 설정 (VS Code 등)
+.vscode/
+.idea/
+*.swp
+
+# MacOS 혹은 Linux에서 생성되는 기타 캐시
+.cache/
