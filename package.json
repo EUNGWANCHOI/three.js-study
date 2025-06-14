@@ -1,0 +1,27 @@
+{
+  "name": "aimlab-web",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "three": "^0.177.0"
+  },
+  "devDependencies": {
+    "vite": "^6.3.5"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/EUNGWANCHOI/three.js-study.git"
+  },
+  "bugs": {
+    "url": "https://github.com/EUNGWANCHOI/three.js-study/issues"
+  },
+  "homepage": "https://github.com/EUNGWANCHOI/three.js-study#readme",
+  "description": ""
+}
