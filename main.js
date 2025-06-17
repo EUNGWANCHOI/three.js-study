@@ -23,6 +23,22 @@ scene.add(light);
 
 camera.position.z = 5;
 
+const rayCaster = new THREE.Raycaster();
+const mouse = new THREE.Vector2();
+
+window.addEventListener("click", (event) => {
+  mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+  mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+
+  rayCaster.setFromCamera(mouse, camera);
+
+  const intersects = rayCaster.intersectObjects(scene.children);
+
+  for (let i = 0; i < intersects.length; i++) {
+    intersects[i].object.material.color.set(0xff0000); // Change color on click
+  }
+});
+
 function animate() {
   requestAnimationFrame(animate);
   cube.rotation.x += 0.01;
