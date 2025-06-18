@@ -72,8 +72,7 @@ let target = null;
 let targetTimeout = null;
 let targetSpawnTime = 0;
 const TARGET_Z = -2;
-const BASE_LIFETIME = 1200;
-const MIN_LIFETIME = 400;
+const FIXED_LIFETIME = 1000; // 고정된 타겟 수명(ms)
 
 // === 타겟 제거 함수 ===
 function removeTarget(hit = false) {
@@ -111,7 +110,7 @@ function createTarget() {
 
   targetTimeout = setTimeout(() => {
     removeTarget(false);
-  }, getCurrentLifetime());
+  }, FIXED_LIFETIME);
 }
 
 // === 게임 시작 함수 ===
@@ -125,7 +124,7 @@ function startGame() {
 }
 
 // === 클릭 이벤트 ===
-window.addEventListener("click", (event) => {
+window.addEventListener("click", () => {
   if (!target || document.pointerLockElement !== renderer.domElement) return;
 
   raycaster.setFromCamera({ x: 0, y: 0 }, camera); // 중앙 기준 레이
