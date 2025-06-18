@@ -46,7 +46,7 @@ let pitch = 0;
 
 document.addEventListener("mousemove", (event) => {
   if (document.pointerLockElement === renderer.domElement) {
-    const sensitivity = 0.003;
+    const sensitivity = 0.002;
     yaw -= event.movementX * sensitivity;
     pitch -= event.movementY * sensitivity;
 
@@ -71,7 +71,7 @@ let score = 0;
 let target = null;
 let targetTimeout = null;
 let targetSpawnTime = 0;
-const TARGET_Z = -4;
+const TARGET_Z = -2;
 const BASE_LIFETIME = 1200;
 const MIN_LIFETIME = 400;
 
