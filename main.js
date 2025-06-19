@@ -2,7 +2,7 @@ import * as THREE from "three";
 
 // === 기본 설정 ===
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xffffff);
+scene.background = new THREE.Color(0x1e1e1e);
 
 const camera = new THREE.PerspectiveCamera(
   75,
@@ -17,10 +17,10 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // === 조명 ===
-const ambientLight = new THREE.AmbientLight(0xffffff, 0.2);
+const ambientLight = new THREE.AmbientLight(0xffffff, 1);
 scene.add(ambientLight);
 
-const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(2, 2, 3);
 scene.add(directionalLight);
 
@@ -50,7 +50,7 @@ document.addEventListener("mousemove", (event) => {
     yaw -= event.movementX * sensitivity;
     pitch -= event.movementY * sensitivity;
 
-    const pitchLimit = Math.PI / 2 - 0.1;
+    const pitchLimit = THREE.MathUtils.degToRad(85); // 85도 제한
     pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
 
     cameraWrapper.rotation.y = yaw;
@@ -83,8 +83,6 @@ function removeTarget(hit = false) {
 
     if (hit) {
       score++;
-      const reactionTime = performance.now() - targetSpawnTime;
-      console.log(`🎯 반응 시간: ${reactionTime.toFixed(1)}ms`);
       scoreElement.innerText = `Score: ${score}`;
     }
 
