@@ -71,7 +71,7 @@ let score = 0;
 let target = null;
 let targetTimeout = null;
 let targetSpawnTime = 0;
-const TARGET_Z = -2;
+const TARGET_Z = -3;
 const FIXED_LIFETIME = 1000; // 고정된 타겟 수명(ms)
 
 // === 타겟 제거 함수 ===
@@ -91,14 +91,18 @@ function removeTarget(hit = false) {
 }
 
 // === 타겟 생성 함수 ===
+function getCenteredRandom(range) {
+  return (Math.random() + Math.random() - 1) * range;
+}
+
 function createTarget() {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
   const sphere = new THREE.Mesh(geometry, material);
 
   sphere.position.set(
-    (Math.random() - 0.5) * 12,
-    (Math.random() - 0.5) * 6,
+    getCenteredRandom(3), // X축: -3 ~ +3 (중앙 쏠림)
+    getCenteredRandom(1.5), // Y축: -1.5 ~ +1.5 (중앙 쏠림)
     TARGET_Z
   );
 
