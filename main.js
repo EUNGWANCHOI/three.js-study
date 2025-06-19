@@ -72,7 +72,8 @@ let target = null;
 let targetTimeout = null;
 let targetSpawnTime = 0;
 const TARGET_Z = -3;
-const FIXED_LIFETIME = 1000; // 고정된 타겟 수명(ms)
+const FIXED_LIFETIME = 1000;
+const MIN_TARGET_DISTANCE = 1.7; // 최소 거리
 
 // === 타겟 제거 함수 ===
 function removeTarget(hit = false) {
@@ -90,21 +91,29 @@ function removeTarget(hit = false) {
   }
 }
 
-// === 타겟 생성 함수 ===
+// === 가우시안 기반 랜덤 좌표 생성 ===
 function getCenteredRandom(range) {
   return (Math.random() + Math.random() - 1) * range;
 }
 
+// === 타겟 생성 함수 (최소 거리 유지) ===
 function createTarget() {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
   const sphere = new THREE.Mesh(geometry, material);
 
-  sphere.position.set(
-    getCenteredRandom(3), // X축: -3 ~ +3 (중앙 쏠림)
-    getCenteredRandom(1.5), // Y축: -1.5 ~ +1.5 (중앙 쏠림)
-    TARGET_Z
-  );
+  let positionFound = false;
+  let newPos = new THREE.Vector3();
+
+  while (!positionFound) {
+    newPos.set(getCenteredRandom(3), getCenteredRandom(1.5), TARGET_Z);
+
+    if (!target || newPos.distanceTo(target.position) >= MIN_TARGET_DISTANCE) {
+      positionFound = true;
+    }
+  }
+
+  sphere.position.copy(newPos);
 
   scene.add(sphere);
   target = sphere;
@@ -129,7 +138,7 @@ function startGame() {
 window.addEventListener("click", () => {
   if (!target || document.pointerLockElement !== renderer.domElement) return;
 
-  raycaster.setFromCamera({ x: 0, y: 0 }, camera); // 중앙 기준 레이
+  raycaster.setFromCamera({ x: 0, y: 0 }, camera); // 중앙 기준
   const intersects = raycaster.intersectObject(target);
 
   if (intersects.length > 0) {
