@@ -73,7 +73,7 @@ let targetTimeout = null;
 let targetSpawnTime = 0;
 const TARGET_Z = -3;
 const FIXED_LIFETIME = 1000;
-const MIN_TARGET_DISTANCE = 1.7; // 최소 거리
+const MIN_TARGET_DISTANCE = 2; // 최소 거리
 
 // === 타겟 제거 함수 ===
 function removeTarget(hit = false) {
@@ -99,7 +99,7 @@ function getCenteredRandom(range) {
 // === 타겟 생성 함수 (최소 거리 유지) ===
 function createTarget() {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
-  const material = new THREE.MeshStandardMaterial({ color: 0x00ffff });
+  const material = new THREE.MeshStandardMaterial({ color: 0xfbff00 });
   const sphere = new THREE.Mesh(geometry, material);
 
   let positionFound = false;
