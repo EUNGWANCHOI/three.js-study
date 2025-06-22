@@ -33,7 +33,6 @@ scene.add(cameraWrapper);
 function enablePointerLock() {
   renderer.domElement.requestPointerLock();
 }
-
 document.addEventListener("click", () => {
   if (document.pointerLockElement !== renderer.domElement) {
     enablePointerLock();
@@ -43,14 +42,13 @@ document.addEventListener("click", () => {
 // === 마우스 이동 시 카메라 회전 적용 ===
 let yaw = 0;
 let pitch = 0;
-
 document.addEventListener("mousemove", (event) => {
   if (document.pointerLockElement === renderer.domElement) {
     const sensitivity = 0.002;
     yaw -= event.movementX * sensitivity;
     pitch -= event.movementY * sensitivity;
 
-    const pitchLimit = THREE.MathUtils.degToRad(85); // 85도 제한
+    const pitchLimit = THREE.MathUtils.degToRad(85);
     pitch = Math.max(-pitchLimit, Math.min(pitchLimit, pitch));
 
     cameraWrapper.rotation.y = yaw;
@@ -73,7 +71,12 @@ let targetTimeout = null;
 let targetSpawnTime = 0;
 const TARGET_Z = -3;
 const FIXED_LIFETIME = 1000;
-const MIN_TARGET_DISTANCE = 2; // 최소 거리
+const MIN_TARGET_DISTANCE = 2;
+
+// === 단순한 가우시안 기반 랜덤 함수 ===
+function getCenteredRandom(range) {
+  return (Math.random() + Math.random() - 1) * range;
+}
 
 // === 타겟 제거 함수 ===
 function removeTarget(hit = false) {
@@ -91,30 +94,19 @@ function removeTarget(hit = false) {
   }
 }
 
-// === 가우시안 기반 랜덤 좌표 생성 ===
-function getCenteredRandom(range) {
-  return (Math.random() + Math.random() - 1) * range;
-}
-
-// === 타겟 생성 함수 (최소 거리 유지) ===
+// === 타겟 생성 함수 (고정된 Z 평면에 랜덤 생성) ===
 function createTarget() {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0xfbff00 });
   const sphere = new THREE.Mesh(geometry, material);
 
-  let positionFound = false;
   let newPos = new THREE.Vector3();
 
-  while (!positionFound) {
+  do {
     newPos.set(getCenteredRandom(3), getCenteredRandom(1.5), TARGET_Z);
-
-    if (!target || newPos.distanceTo(target.position) >= MIN_TARGET_DISTANCE) {
-      positionFound = true;
-    }
-  }
+  } while (target && newPos.distanceTo(target.position) < MIN_TARGET_DISTANCE);
 
   sphere.position.copy(newPos);
-
   scene.add(sphere);
   target = sphere;
   targetSpawnTime = performance.now();
@@ -126,6 +118,11 @@ function createTarget() {
 
 // === 게임 시작 함수 ===
 function startGame() {
+  yaw = 0;
+  pitch = 0;
+  cameraWrapper.rotation.set(0, 0, 0);
+  camera.rotation.set(0, 0, 0);
+
   score = 0;
   scoreElement.innerText = `Score: ${score}`;
   scoreElement.style.display = "block";
@@ -138,7 +135,7 @@ function startGame() {
 window.addEventListener("click", () => {
   if (!target || document.pointerLockElement !== renderer.domElement) return;
 
-  raycaster.setFromCamera({ x: 0, y: 0 }, camera); // 중앙 기준
+  raycaster.setFromCamera({ x: 0, y: 0 }, camera);
   const intersects = raycaster.intersectObject(target);
 
   if (intersects.length > 0) {
@@ -146,8 +143,11 @@ window.addEventListener("click", () => {
   }
 });
 
-// === 버튼 이벤트 연결 ===
-startButton.addEventListener("click", startGame);
+// === 시작 버튼 ===
+startButton.addEventListener("click", () => {
+  enablePointerLock();
+  startGame();
+});
 
 // === 애니메이션 루프 ===
 function animate() {
