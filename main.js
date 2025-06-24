@@ -24,7 +24,7 @@ const directionalLight = new THREE.DirectionalLight(0xffffff, 1.5);
 directionalLight.position.set(2, 2, 3);
 scene.add(directionalLight);
 
-// === 카메라 컨트롤용 wrapper 생성 ===
+// === 카메라 컨트롤용 wrapper ===
 const cameraWrapper = new THREE.Object3D();
 cameraWrapper.add(camera);
 scene.add(cameraWrapper);
@@ -39,7 +39,7 @@ document.addEventListener("click", () => {
   }
 });
 
-// === 마우스 이동 시 카메라 회전 적용 ===
+// === 카메라 회전 ===
 let yaw = 0;
 let pitch = 0;
 document.addEventListener("mousemove", (event) => {
@@ -56,29 +56,33 @@ document.addEventListener("mousemove", (event) => {
   }
 });
 
-// === DOM 요소 ===
+// === DOM ===
 const scoreElement = document.getElementById("score");
 const startButton = document.getElementById("start-btn");
 const crosshair = document.getElementById("crosshair");
+const modeSelection = document.getElementById("mode-selection");
+const modeABtn = document.getElementById("mode-a-btn");
+const modeBBtn = document.getElementById("mode-b-btn");
 
-// === 레이캐스터 ===
-const raycaster = new THREE.Raycaster();
-
-// === 상태 변수 ===
+// === 상태 ===
+let gameMode = null;
+let gameEnded = false;
 let score = 0;
-let target = null;
-let targetTimeout = null;
-let targetSpawnTime = 0;
+const raycaster = new THREE.Raycaster();
 const TARGET_Z = -3;
 const FIXED_LIFETIME = 1000;
 const MIN_TARGET_DISTANCE = 2;
+let target = null; // Mode A용
+let targetTimeout = null;
+let targets = []; // Mode B용
+const MAX_TARGETS_B = 4;
 
-// === 단순한 가우시안 기반 랜덤 함수 ===
+// === 랜덤 위치 ===
 function getCenteredRandom(range) {
   return (Math.random() + Math.random() - 1) * range;
 }
 
-// === 타겟 제거 함수 ===
+// === 타겟 제거 ===
 function removeTarget(hit = false) {
   if (target) {
     scene.remove(target);
@@ -88,20 +92,32 @@ function removeTarget(hit = false) {
     if (hit) {
       score++;
       scoreElement.innerText = `Score: ${score}`;
+      if (score >= 50) return endGame();
     }
 
     createTarget();
   }
 }
 
-// === 타겟 생성 함수 (고정된 Z 평면에 랜덤 생성) ===
+function removeTargetB(mesh) {
+  const idx = targets.indexOf(mesh);
+  if (idx !== -1) {
+    scene.remove(mesh);
+    targets.splice(idx, 1);
+    score++;
+    scoreElement.innerText = `Score: ${score}`;
+    if (score >= 50) return endGame();
+    createTargetB();
+  }
+}
+
+// === 타겟 생성 ===
 function createTarget() {
   const geometry = new THREE.SphereGeometry(0.5, 32, 32);
   const material = new THREE.MeshStandardMaterial({ color: 0xfbff00 });
   const sphere = new THREE.Mesh(geometry, material);
 
   let newPos = new THREE.Vector3();
-
   do {
     newPos.set(getCenteredRandom(3), getCenteredRandom(1.5), TARGET_Z);
   } while (target && newPos.distanceTo(target.position) < MIN_TARGET_DISTANCE);
@@ -109,14 +125,30 @@ function createTarget() {
   sphere.position.copy(newPos);
   scene.add(sphere);
   target = sphere;
-  targetSpawnTime = performance.now();
 
   targetTimeout = setTimeout(() => {
     removeTarget(false);
   }, FIXED_LIFETIME);
 }
 
-// === 게임 시작 함수 ===
+function createTargetB() {
+  const geometry = new THREE.SphereGeometry(0.5, 32, 32);
+  const material = new THREE.MeshStandardMaterial({ color: 0x00ffd0 });
+  const sphere = new THREE.Mesh(geometry, material);
+
+  let newPos = new THREE.Vector3();
+  do {
+    newPos.set(getCenteredRandom(3), getCenteredRandom(1.5), TARGET_Z);
+  } while (
+    targets.some((t) => newPos.distanceTo(t.position) < MIN_TARGET_DISTANCE)
+  );
+
+  sphere.position.copy(newPos);
+  scene.add(sphere);
+  targets.push(sphere);
+}
+
+// === 게임 시작 ===
 function startGame() {
   yaw = 0;
   pitch = 0;
@@ -124,39 +156,90 @@ function startGame() {
   camera.rotation.set(0, 0, 0);
 
   score = 0;
+  gameEnded = false;
   scoreElement.innerText = `Score: ${score}`;
   scoreElement.style.display = "block";
-  startButton.style.display = "none";
   crosshair.style.display = "block";
-  createTarget();
+
+  if (gameMode === "A") {
+    createTarget();
+  } else if (gameMode === "B") {
+    for (let i = 0; i < MAX_TARGETS_B; i++) {
+      createTargetB();
+    }
+  }
+}
+
+// === 게임 종료 ===
+function endGame() {
+  gameEnded = true;
+  scoreElement.innerText += " - Game Over!";
+  crosshair.style.display = "none";
+
+  // === Pointer Lock 해제 ===
+  if (document.pointerLockElement) {
+    document.exitPointerLock();
+  }
+
+  // 타겟 제거
+  if (gameMode === "A") {
+    if (target) scene.remove(target);
+    clearTimeout(targetTimeout);
+  } else if (gameMode === "B") {
+    targets.forEach((t) => scene.remove(t));
+    targets = [];
+  }
+
+  // 재시작 UI 표시
+  setTimeout(() => {
+    startButton.style.display = "block";
+    modeSelection.style.display = "none";
+  }, 1000);
 }
 
 // === 클릭 이벤트 ===
 window.addEventListener("click", () => {
-  if (!target || document.pointerLockElement !== renderer.domElement) return;
+  if (document.pointerLockElement !== renderer.domElement || gameEnded) return;
 
   raycaster.setFromCamera({ x: 0, y: 0 }, camera);
-  const intersects = raycaster.intersectObject(target);
 
-  if (intersects.length > 0) {
-    removeTarget(true);
+  if (gameMode === "A" && target) {
+    const intersects = raycaster.intersectObject(target);
+    if (intersects.length > 0) removeTarget(true);
+  } else if (gameMode === "B") {
+    const intersects = raycaster.intersectObjects(targets);
+    if (intersects.length > 0) removeTargetB(intersects[0].object);
   }
 });
 
 // === 시작 버튼 ===
 startButton.addEventListener("click", () => {
+  startButton.style.display = "none";
+  modeSelection.style.display = "flex";
+});
+
+modeABtn.addEventListener("click", () => {
+  gameMode = "A";
+  modeSelection.style.display = "none";
   enablePointerLock();
   startGame();
 });
 
-// === 애니메이션 루프 ===
+modeBBtn.addEventListener("click", () => {
+  gameMode = "B";
+  modeSelection.style.display = "none";
+  enablePointerLock();
+  startGame();
+});
+
+// === 렌더 루프 ===
 function animate() {
   requestAnimationFrame(animate);
   renderer.render(scene, camera);
 }
 animate();
 
-// === 리사이즈 대응 ===
+// === 리사이즈 ===
 window.addEventListener("resize", () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
