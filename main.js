@@ -17,8 +17,8 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 document.body.appendChild(renderer.domElement);
 
 // === 조명 ===
-scene.add(new THREE.AmbientLight(0xffffff, 1));
-const dirLight = new THREE.DirectionalLight(0xffffff, 1.5);
+scene.add(new THREE.AmbientLight(0xf1f1f1, 1));
+const dirLight = new THREE.DirectionalLight(0xf1f1f1, 1.5);
 dirLight.position.set(2, 2, 3);
 scene.add(dirLight);
 
